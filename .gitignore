@@ -1,0 +1,18 @@
+
+images/
+results/
+uploads/
+
+# Environments
+.env
+.envrc
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Miscellaneous
+__pycache__/
+.DS_Store

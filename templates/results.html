@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extraction Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container wide">
+        <header>
+            <h1>Extraction Results</h1>
+            <p class="subtitle">{{ invoices|length }} invoice(s) processed</p>
+        </header>
+
+        <div class="actions">
+            <a href="{{ url_for('download', job_id=job_id, filetype='summary') }}" class="btn btn-primary">
+                Download Summary CSV
+            </a>
+            <a href="{{ url_for('download', job_id=job_id, filetype='items') }}" class="btn btn-primary">
+                Download Line Items CSV
+            </a>
+            {% if has_excel %}
+            <a href="{{ url_for('download', job_id=job_id, filetype='excel') }}" class="btn btn-secondary">
+                Download Excel
+            </a>
+            {% endif %}
+            <a href="{{ url_for('index') }}" class="btn btn-outline">
+                Process More
+            </a>
+        </div>
+
+        {% for inv in invoices %}
+        <div class="invoice-card">
+            <h2>{{ inv.filename }}</h2>
+
+            <div class="field-grid">
+                <div class="field">
+                    <span class="label">Invoice No.</span>
+                    <span class="value">{{ inv.data.invoice_no if inv.data.invoice_no is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Date</span>
+                    <span class="value">{{ inv.data.date if inv.data.date is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Customer</span>
+                    <span class="value">{{ inv.data.customer_name if inv.data.customer_name is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Customer Address</span>
+                    <span class="value">{{ inv.data.customer_address if inv.data.customer_address is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Customer GSTIN</span>
+                    <span class="value mono">{{ inv.data.customer_gstin if inv.data.customer_gstin is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Gross Total</span>
+                    <span class="value">{{ inv.data.gross_total if inv.data.gross_total is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Discount</span>
+                    <span class="value">{{ inv.data.discount if inv.data.discount is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Total After Discount</span>
+                    <span class="value">{{ inv.data.total_after_discount if inv.data.total_after_discount is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">SGST</span>
+                    <span class="value">{{ inv.data.sgst if inv.data.sgst is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">CGST</span>
+                    <span class="value">{{ inv.data.cgst if inv.data.cgst is not none else '—' }}</span>
+                </div>
+                <div class="field">
+                    <span class="label">Net Total</span>
+                    <span class="value highlight">{{ inv.data.net_total if inv.data.net_total is not none else '—' }}</span>
+                </div>
+            </div>
+
+            {% if inv.data.line_items %}
+            <h3>Line Items</h3>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>HSN</th>
+                            <th>Description</th>
+                            <th>Size</th>
+                            <th>Qty</th>
+                            <th>Rate</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in inv.data.line_items %}
+                        <tr>
+                            <td>{{ item.hsn_code or '' }}</td>
+                            <td>{{ item.description or '' }}</td>
+                            <td>{{ item.size or '' }}</td>
+                            <td>{{ item.qty if item.qty is not none else '' }}</td>
+                            <td>{{ item.rate if item.rate is not none else '' }}</td>
+                            <td class="amount">{{ item.amount if item.amount is not none else '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            {% if inv.discrepancies %}
+            <div class="discrepancies">
+                <h3>Validation Warnings</h3>
+                <ul>
+                    {% for d in inv.discrepancies %}
+                    <li>
+                        <strong>{{ d.rule }}:</strong> {{ d.message }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

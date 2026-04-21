@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Extractor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Invoice Extractor</h1>
+            <p class="subtitle">Upload invoice images to extract structured data into CSV</p>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <form action="/process" method="post" enctype="multipart/form-data" id="upload-form">
+            <div class="upload-area" id="drop-zone">
+                <div class="upload-icon">&#128196;</div>
+                <p class="upload-text">Drag & drop invoice images here</p>
+                <p class="upload-hint">or click to browse (JPG, PNG)</p>
+                <input type="file" name="invoices" id="file-input" multiple accept=".jpg,.jpeg,.png">
+            </div>
+
+            <div id="file-list" class="file-list"></div>
+
+            <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
+                Extract Invoice Data
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+        <form action="/process-images" method="post">
+            <button type="submit" class="btn btn-secondary">
+                Process All Images in /images Directory
+            </button>
+        </form>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Processing invoices... This may take 20-60 seconds per image on CPU.</p>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+        const submitBtn = document.getElementById('submit-btn');
+        const loading = document.getElementById('loading');
+        const forms = document.querySelectorAll('form');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            fileInput.files = e.dataTransfer.files;
+            updateFileList();
+        });
+
+        fileInput.addEventListener('change', updateFileList);
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            const files = fileInput.files;
+            if (files.length > 0) {
+                submitBtn.disabled = false;
+                for (const file of files) {
+                    const div = document.createElement('div');
+                    div.className = 'file-item';
+                    div.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                    fileList.appendChild(div);
+                }
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        forms.forEach(form => {
+            form.addEventListener('submit', () => {
+                loading.classList.remove('hidden');
+                submitBtn.disabled = true;
+            });
+        });
+    </script>
+</body>
+</html>
